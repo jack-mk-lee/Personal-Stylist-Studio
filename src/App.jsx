@@ -1,121 +1,149 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useState, useRef } from 'react'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [photo, setPhoto] = useState(null)
+  const [photoPreview, setPhotoPreview] = useState(null)
+  const [height, setHeight] = useState('')
+  const [weight, setWeight] = useState('')
+  const [dragging, setDragging] = useState(false)
+  const fileInputRef = useRef(null)
+
+  const handleFile = (file) => {
+    if (!file || !file.type.startsWith('image/')) return
+    setPhoto(file)
+    setPhotoPreview(URL.createObjectURL(file))
+  }
+
+  const handleFileChange = (e) => handleFile(e.target.files[0])
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    setDragging(false)
+    handleFile(e.dataTransfer.files[0])
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    setDragging(true)
+  }
+
+  const handleDragLeave = () => setDragging(false)
+
+  const handleAnalyze = () => {
+    if (!photo || !height || !weight) return
+    // TODO: 분석 API 연동
+    alert(`분석 시작\n키: ${height}cm / 몸무게: ${weight}kg`)
+  }
+
+  const isReady = photo && height && weight
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="page">
+      <header className="header">
+        <span className="logo-icon">✦</span>
+        <h1 className="logo-text">Personal Stylist Studio</h1>
+      </header>
 
-      <div className="ticks"></div>
+      <main className="main">
+        <p className="subtitle">사진과 체형 정보를 입력하면 맞춤 스타일을 분석해드립니다</p>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        <div className="card">
+          {/* 사진 업로드 */}
+          <section className="section">
+            <label className="section-label">내 사진</label>
+            <div
+              className={`upload-zone ${dragging ? 'dragging' : ''} ${photoPreview ? 'has-image' : ''}`}
+              onClick={() => fileInputRef.current.click()}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+            >
+              {photoPreview ? (
+                <img src={photoPreview} alt="업로드된 사진" className="preview-img" />
+              ) : (
+                <div className="upload-placeholder">
+                  <span className="upload-icon">＋</span>
+                  <p className="upload-text">클릭하거나 사진을 드래그하세요</p>
+                  <p className="upload-hint">JPG, PNG, WEBP 지원</p>
+                </div>
+              )}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+            />
+            {photoPreview && (
+              <button
+                className="change-photo-btn"
+                onClick={(e) => { e.stopPropagation(); fileInputRef.current.click() }}
+              >
+                사진 변경
+              </button>
+            )}
+          </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+          {/* 체형 정보 */}
+          <section className="section">
+            <label className="section-label">체형 정보</label>
+            <div className="inputs-row">
+              <div className="input-group">
+                <label className="input-label" htmlFor="height">키</label>
+                <div className="input-wrapper">
+                  <input
+                    id="height"
+                    type="number"
+                    className="input"
+                    placeholder="170"
+                    min="100"
+                    max="250"
+                    value={height}
+                    onChange={(e) => setHeight(e.target.value)}
+                  />
+                  <span className="input-unit">cm</span>
+                </div>
+              </div>
+              <div className="input-group">
+                <label className="input-label" htmlFor="weight">몸무게</label>
+                <div className="input-wrapper">
+                  <input
+                    id="weight"
+                    type="number"
+                    className="input"
+                    placeholder="65"
+                    min="30"
+                    max="200"
+                    value={weight}
+                    onChange={(e) => setWeight(e.target.value)}
+                  />
+                  <span className="input-unit">kg</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* 분석 버튼 */}
+          <button
+            className={`analyze-btn ${isReady ? 'ready' : ''}`}
+            onClick={handleAnalyze}
+            disabled={!isReady}
+          >
+            분석하기
+          </button>
+
+          {!isReady && (
+            <p className="hint">
+              {!photo && '사진을 업로드하고 '}
+              {photo && (!height || !weight) && '키와 몸무게를 입력하고 '}
+              분석하기 버튼을 눌러주세요
+            </p>
+          )}
+        </div>
+      </main>
+    </div>
   )
 }
 
